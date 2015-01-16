@@ -26,15 +26,17 @@ namespace Common.File
         private IOnProgressChangedListener _onProgressChangedListener;
         private HttpStatusCode _httpStatusCode;
         private FtpStatusCode _ftpStatusCode;
-        private string _statusDescription;
-        private string _errorMessage;
-        private Stream _responseStream; //non-seekable, forward-only, read-only stream
-        private long _contentLength;
+        private string _statusDescription = string.Empty;
+        private string _errorMessage = string.Empty;
+        private HttpWebResponse _httpResponse = null;
+        private FtpWebResponse _ftpResponse = null;
+        private Stream _responseStream =  null; //non-seekable, forward-only, read-only stream
+        private long _contentLength = 0;
         private int _requestTimeout = 180; //second
 
         public bool SaveHttpUrl(string url, string savePath)
         {
-            if(HttpDownload(url)) { return SaveFile(savePath); }
+            if (HttpDownload(url)) { return SaveFile(savePath); }
             return false;
         }
 
@@ -54,74 +56,70 @@ namespace Common.File
         {
             if (FtpDownload(url, userName, password)) { return ReadStream(); }
             return string.Empty;
-        }        
+        }
+
+        private void Close()
+        {
+            if (_httpResponse != null) { _httpResponse.Close(); _httpResponse = null; }
+            if (_ftpResponse != null) { _ftpResponse.Close(); _ftpResponse = null; }
+            if (_responseStream != null) { _responseStream.Close(); _responseStream = null; }            
+        }
 
         private bool HttpDownload(string url)
         {
-            bool complete = true;
+            bool complete = false;
             HttpWebRequest httpRequest = (HttpWebRequest)WebRequest.Create(url);
             httpRequest.Timeout = _requestTimeout;
-            HttpWebResponse httpResponse = null;
-            
             try
             {
-                httpResponse = (HttpWebResponse)httpRequest.GetResponse();
-                _httpStatusCode = httpResponse.StatusCode;
-                _statusDescription = httpResponse.StatusDescription;
+                _httpResponse = (HttpWebResponse)httpRequest.GetResponse();
+                _httpStatusCode = _httpResponse.StatusCode;
+                _statusDescription = _httpResponse.StatusDescription;
 
-                if (httpResponse.StatusCode == HttpStatusCode.OK)
+                if (_httpResponse.StatusCode == HttpStatusCode.OK)
                 {
-                    _responseStream = httpResponse.GetResponseStream();
-                    _contentLength = httpResponse.ContentLength;
-                }
-                else
-                {
-                    complete = false;
+                    _responseStream = _httpResponse.GetResponseStream();
+                    _contentLength = _httpResponse.ContentLength;
+
+                    complete = true;
                 }
             }
             catch (Exception ex)
             {
-                complete = false;
                 _errorMessage = ex.Message;
-            }
-
-            if (httpResponse != null) { httpResponse.Close(); }
+                Close();
+            }           
 
             return complete;
         }
 
         private bool FtpDownload(string url, string userName, string password)
         {
-            bool complete = true;
+            bool complete = false;
             FtpWebRequest ftpRequest = (FtpWebRequest)WebRequest.Create(url);
             ftpRequest.Timeout = _requestTimeout;
             ftpRequest.Method = WebRequestMethods.Ftp.DownloadFile;
             ftpRequest.Credentials = new NetworkCredential(userName, password);
-            FtpWebResponse ftpResponse = null;
 
             try
             {
-                ftpResponse = (FtpWebResponse)ftpRequest.GetResponse();
-                _ftpStatusCode = ftpResponse.StatusCode;
-                _statusDescription = ftpResponse.StatusDescription;
+                _ftpResponse = (FtpWebResponse)ftpRequest.GetResponse();
+                _ftpStatusCode = _ftpResponse.StatusCode;
+                _statusDescription = _ftpResponse.StatusDescription;
 
-                if (ftpResponse.StatusCode == FtpStatusCode.FileActionOK)
+                if (_ftpResponse.StatusCode == FtpStatusCode.FileActionOK)
                 {
-                    _responseStream = ftpResponse.GetResponseStream();
-                    _contentLength = ftpResponse.ContentLength;
-                }
-                else
-                {
-                    complete = false;
+                    _responseStream = _ftpResponse.GetResponseStream();
+                    _contentLength = _ftpResponse.ContentLength;
+
+                    complete = true;
                 }
             }
             catch (Exception ex)
             {
-                complete = false;
                 _errorMessage = ex.Message;
-            }
-
-            if (ftpResponse != null) { ftpResponse.Close(); }
+                Close();
+            }           
 
             return complete;
         }
@@ -131,7 +129,7 @@ namespace Common.File
             bool complete = false;
             FileStream fs = null;
 
-            if(_responseStream != null)
+            if (_responseStream != null)
             {
                 try
                 {
@@ -158,14 +156,13 @@ namespace Common.File
                     complete = true;
                 }
                 catch (Exception ex)
-                {                    
+                {
                     _errorMessage = ex.Message;
                 }
 
                 if (fs != null) { fs.Close(); }
-                _responseStream.Close();
-                _responseStream = null;
-            }            
+                Close();                
+            }
 
             return complete;
         }
@@ -174,15 +171,14 @@ namespace Common.File
         {
             string content = string.Empty;
 
-            if(_responseStream != null)
+            if (_responseStream != null)
             {
                 using (StreamReader reader = new StreamReader(_responseStream))
                 {
                     content = reader.ReadToEnd();
                 }
 
-                _responseStream.Close();
-                _responseStream = null;
+                Close();
             }
 
             return content;
@@ -198,6 +194,6 @@ namespace Common.File
         {
             void OnProgressChangedListener(long contentSize, long downloadedSize, bool isCompleted);
         }
-        #endregion interface        
+        #endregion interface
     }
 }
