@@ -32,7 +32,7 @@ namespace Common.File
         private FtpWebResponse _ftpResponse = null;
         private Stream _responseStream =  null; //non-seekable, forward-only, read-only stream
         private long _contentLength = 0;
-        private int _requestTimeout = 180; //second
+        private int _requestTimeout = 180000; //ms
 
         public bool SaveHttpUrl(string url, string savePath)
         {
@@ -97,9 +97,9 @@ namespace Common.File
         {
             bool complete = false;
             FtpWebRequest ftpRequest = (FtpWebRequest)WebRequest.Create(url);
-            ftpRequest.Timeout = _requestTimeout;
-            ftpRequest.Method = WebRequestMethods.Ftp.DownloadFile;
+            ftpRequest.Timeout = _requestTimeout;            
             ftpRequest.Credentials = new NetworkCredential(userName, password);
+            ftpRequest.Method = WebRequestMethods.Ftp.DownloadFile;          
 
             try
             {
@@ -107,13 +107,10 @@ namespace Common.File
                 _ftpStatusCode = _ftpResponse.StatusCode;
                 _statusDescription = _ftpResponse.StatusDescription;
 
-                if (_ftpResponse.StatusCode == FtpStatusCode.FileActionOK)
-                {
-                    _responseStream = _ftpResponse.GetResponseStream();
-                    _contentLength = _ftpResponse.ContentLength;
+                _responseStream = _ftpResponse.GetResponseStream();
+                _contentLength = FtpDownload_GetFileSize(url, userName, password);
 
-                    complete = true;
-                }
+                complete = true;
             }
             catch (Exception ex)
             {
@@ -122,6 +119,27 @@ namespace Common.File
             }           
 
             return complete;
+        }
+
+        private long FtpDownload_GetFileSize(string url, string userName, string password)
+        {
+            long fileSize = 0;
+            FtpWebRequest ftpRequest = (FtpWebRequest)WebRequest.Create(url);
+            ftpRequest.Timeout = _requestTimeout;
+            ftpRequest.Credentials = new NetworkCredential(userName, password);
+            ftpRequest.Method = WebRequestMethods.Ftp.GetFileSize;
+
+            FtpWebResponse ftpResponse = null;
+            try
+            {
+                ftpResponse = (FtpWebResponse)ftpRequest.GetResponse();
+                fileSize = ftpResponse.ContentLength;
+            }
+            catch (Exception) { }
+
+            if (ftpResponse != null) { ftpResponse.Close(); }
+
+            return fileSize;
         }
 
         private bool SaveFile(string savePath)
