@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 
-namespace Sample
+namespace Extension
 {
     // 參考: http://stackoverflow.com/questions/6180704/combine-several-similar-select-expressions-into-a-single-expression
     
