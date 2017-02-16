@@ -1,0 +1,109 @@
+using System;
+using System.Collections;
+using System.IO;
+using System.Runtime.Serialization.Formatters.Binary;
+
+namespace Sample
+{
+    public static class CloneExtensions
+    {
+        public static T Clone<T>(this object obj) where T : new()
+        {
+            return DeepCloneByReflection((T)obj);
+        }
+
+        public static T Clone<T>(this IList obj) where T : new()
+        {
+            return DeepCloneByReflection((T)obj);
+        }
+
+        /// <summary>
+        /// MemoryStream 深複製物件，物件必需設定 必須 [Serializable]
+        /// </summary>
+        private static T DeepCloneByMembory<T>(T item) where T : new()
+        {
+            if (Object.ReferenceEquals(item, null))
+            {
+                return default(T);
+            }
+
+            if (!typeof(T).IsSerializable)
+            {
+                throw new ArgumentException("The type must be serializable.", "source");
+            }
+
+            using (var stream = new MemoryStream())
+            {
+                var formatter = new BinaryFormatter();
+                formatter.Serialize(stream, item);
+
+                stream.Seek(0, SeekOrigin.Begin);
+
+                return (T)formatter.Deserialize(stream); ;
+            }
+        }
+
+        /// <summary>
+        /// Reflection 深複製物件，只處理 Property
+        /// </summary>
+        private static T DeepCloneByReflection<T>(T cloneObj) where T : new()
+        {
+            if (Object.ReferenceEquals(cloneObj, null))
+            {
+                return default(T);
+            }
+
+            #region 處理 List, Array
+
+            var itemType = cloneObj.GetType();
+
+            if (itemType.IsGenericType)
+            {
+                var list = (IList)cloneObj;
+                var newList = (IList)Activator.CreateInstance(itemType);
+
+                foreach (var item in list)
+                {
+                    newList.Add(DeepCloneByReflection(item));
+                }
+
+                return (T)newList;
+            }
+            else if (itemType.IsArray)
+            {
+                var arr = cloneObj as Array;
+
+                return (T)arr.Clone();
+            }
+
+            #endregion 處理 List, Array
+
+            var newObj = Activator.CreateInstance(itemType);
+
+            // 處理 Property(屬性)，GetProperties() 只抓 Public 的屬性
+            foreach (var prop in cloneObj.GetType().GetProperties())
+            {
+                if (prop.CanWrite)
+                {
+                    var propType = prop.PropertyType;
+                    var value = prop.GetValue(cloneObj, null);
+                    var newPropInfo = newObj.GetType().GetProperty(prop.Name);
+
+                    if (propType.IsGenericType
+                        || propType.IsArray
+                        || (propType.IsClass && propType.UnderlyingSystemType != typeof(String))
+                        || propType.IsInterface)
+                    {
+                        newPropInfo.SetValue(newObj, DeepCloneByReflection(value));
+                    }
+                    else
+                    {
+                        newPropInfo.SetValue(newObj, Convert.ChangeType(value, prop.PropertyType));
+                    }
+                }
+            }
+
+            return (T)newObj;
+        }
+    }
+}
