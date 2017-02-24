@@ -1,0 +1,38 @@
+using System;
+using System.ComponentModel.DataAnnotations;
+
+namespace Sample
+{
+    public static class MvcModelValidationAttributeHelper
+    {
+        /// <summary>
+        /// 驗證 ValidationAttribute
+        /// <para>Sample:</para>
+        /// <para>
+        /// MvcModelValidationAttributeHelper.Validate(data, error => { throw new ArgumentException(error); });
+        /// </para>
+        /// </summary>
+        /// <param name="model">要驗證的 Model</param>
+        /// <param name="error">錯誤時執行的動作</param>
+        public static void Validate<T>(T model, Action<string> error) where T : class, new()
+        {
+            var properties = model.GetType().GetProperties();
+
+            foreach (var prop in properties)
+            {
+                object[] attrs = prop.GetCustomAttributes(true);
+                var value = prop.GetValue(model, null);
+
+                foreach (var attr in attrs)
+                {
+                    var validateAttr = attr as ValidationAttribute;
+
+                    if (validateAttr != null && validateAttr.IsValid(value) == false)
+                    {
+                        error(validateAttr.ErrorMessage);
+                    }
+                }
+            }
+        }
+    }
+}
