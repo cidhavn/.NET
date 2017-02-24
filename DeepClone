@@ -18,7 +18,7 @@ namespace Sample
         }
 
         /// <summary>
-        /// MemoryStream 深複製物件，物件必需設定 必須 [Serializable]
+        /// Serializable 深複製物件，物件必需設定 必須 [Serializable]
         /// </summary>
         private static T DeepCloneByMembory<T>(T item) where T : new()
         {
