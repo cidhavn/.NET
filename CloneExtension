@@ -11,6 +11,9 @@ namespace Sample
 {
     public static class CloneExtensions
     {
+        /// <summary>
+        /// 淺複製 (Shallow clone)
+        /// </summary>
         public static T Clone<T>(this T obj) where T : class, new()
         {
             var inst = obj.GetType().GetMethod("MemberwiseClone",
@@ -18,7 +21,10 @@ namespace Sample
 
             return (T)inst?.Invoke(obj, null);
         }
-
+        
+        /// <summary>
+        /// 深複製
+        /// </summary>
         public static T DeepClone<T>(this T obj) where T : class, new()
         {
             return DeepCloneByReflection(obj);
