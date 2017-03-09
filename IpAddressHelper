@@ -54,20 +54,15 @@ namespace Sample
             // HTTP_X_FORWARDED_FOR: 無(或以逗點串接多個經過的代理伺服器 IP)
 
             var ipInfo = GetRequestInfo();
-            string clientIP = string.Empty;
-
-            if (string.IsNullOrEmpty(ipInfo.HTTP_VIA))
+            
+            string clientIP = ipInfo.REMOTE_ADDR; //REMOTE_ADDR = HttpContext.Current.Request.UserHostAddress
+            
+            if (string.IsNullOrEmpty(ipInfo.HTTP_VIA) == false
+                && string.IsNullOrEmpty(ipInfo.HTTP_X_FORWARDED_FOR) == false)
             {
-                clientIP = ipInfo.REMOTE_ADDR;
-            }
-            else
-            {
-                if (string.IsNullOrEmpty(ipInfo.HTTP_X_FORWARDED_FOR) == false)
-                {
-                    var addressList = ipInfo.HTTP_X_FORWARDED_FOR.Split(',');
+                var addressList = ipInfo.HTTP_X_FORWARDED_FOR.Split(',');
 
-                    clientIP = addressList[0];
-                }
+                clientIP = addressList[0];
             }
 
             return clientIP;
