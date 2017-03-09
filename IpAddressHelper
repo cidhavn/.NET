@@ -60,9 +60,7 @@ namespace Sample
             if (string.IsNullOrEmpty(ipInfo.HTTP_VIA) == false
                 && string.IsNullOrEmpty(ipInfo.HTTP_X_FORWARDED_FOR) == false)
             {
-                var addressList = ipInfo.HTTP_X_FORWARDED_FOR.Split(',');
-
-                clientIP = addressList[0];
+                clientIP = ipInfo.HTTP_X_FORWARDED_FOR.Split(',')[0];
             }
 
             return clientIP;
