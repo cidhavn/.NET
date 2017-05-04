@@ -5,6 +5,7 @@ namespace Sample
 {
     public class SerialNumberHelper
     {
+        // 處理 thread-safe(安全執行緒) + lazy singleton(延遲載入實體) (for 4.0↑)
         private static Lazy<SerialNumberHelper> _instance = new Lazy<SerialNumberHelper>();
         private static readonly object _lockObj = new object();
 
@@ -82,6 +83,11 @@ namespace Sample
         #endregion Redis 產生法
 
         #region 時間位元運算產生法 (Snowflake)
+        
+        // 設計概念參考 Twitter Snowflake
+        // Twitter https://github.com/twitter/snowflake/releases/tag/snowflake-2010
+        // 說明 http://www.lanindex.com/twitter-snowflake%EF%BC%8C64%E4%BD%8D%E8%87%AA%E5%A2%9Eid%E7%AE%97%E6%B3%95%E8%AF%A6%E8%A7%A3/
+        // C# IdGen https://github.com/RobThree/IdGen
 
         private static int _sequence = 0;
         private static long _lastKey = -1;
