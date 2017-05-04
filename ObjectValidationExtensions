@@ -6,13 +6,13 @@ using System.Reflection;
 
 namespace Sample
 {
-    public static class ObjectValidateExtension
+    public static class ObjectValidationExtensions
     {
         /// <summary>
         /// 驗證 ValidationAttribute
         /// <para>Sample:</para>
         /// <para>
-        /// bool isValidate = ModelValidationHelper.Validate(data);
+        /// bool isValidate = obj.Validate();
         /// </para>
         /// </summary>
         public static bool Validate<T>(this T obj) where T : class, new()
@@ -24,7 +24,7 @@ namespace Sample
         /// 驗證 ValidationAttribute
         /// <para>Sample:</para>
         /// <para>
-        /// ModelValidationHelper.Validate(data, errorMsg => { throw new ArgumentException(errorMsg); });
+        /// bool isValidate = obj.Validate(data, errorMsg => { throw new ArgumentException(errorMsg); });
         /// </para>
         /// </summary>
         /// <param name="obj">要驗證的 Model</param>
