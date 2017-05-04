@@ -9,7 +9,7 @@ namespace Sample
     public static class ObjectValidationExtensions
     {
         /// <summary>
-        /// 驗證 ValidationAttribute
+        /// 驗證 ValidationAttribute，僅處理第一層的資料驗證
         /// <para>Sample:</para>
         /// <para>
         /// bool isValidate = obj.Validate();
@@ -21,7 +21,7 @@ namespace Sample
         }
 
         /// <summary>
-        /// 驗證 ValidationAttribute
+        /// 驗證 ValidationAttribute，僅處理第一層的資料驗證
         /// <para>Sample:</para>
         /// <para>
         /// bool isValidate = obj.Validate(data, errorMsg => { throw new ArgumentException(errorMsg); });
