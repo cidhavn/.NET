@@ -9,7 +9,7 @@ using System.Runtime.Serialization.Formatters.Binary;
 
 namespace Sample
 {
-    public static class CloneExtensions
+    public static class ObjectCloneExtension
     {
         /// <summary>
         /// 淺複製 (Shallow clone)
